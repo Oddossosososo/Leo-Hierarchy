@@ -21,8 +21,7 @@
 <path class="infield" d="M320 190 H680 Q790 190 790 300 Q790 410 680 410 H320 Q210 410 210 300 Q210 190 320 190Z"/>
 <text x="500" y="285" text-anchor="middle" class="track-label">LEO GRAND PRIX</text><text x="500" y="315" text-anchor="middle" class="track-label">8-TIER CIRCUIT</text>
 <g id="trackLanes"></g>
-<path d="M160 265 V335 M168 265 V335 M176 265 V335" class="startline"/>
-<text x="125" y="250" class="track-label">START / FINISH</text>
+<g id="finishLine" aria-label="Start and finish line"><rect x="34" y="278" width="132" height="44" fill="#fff" stroke="#fff" stroke-width="2"/><path d="M34 278h16v11H34zm32 0h16v11H66zm32 0h16v11H98zm32 0h16v11h-16zM50 289h16v11H50zm32 0h16v11H82zm32 0h16v11h-16zM34 300h16v11H34zm32 0h16v11H66zm32 0h16v11H98zm32 0h16v11h-16zM50 311h16v11H50zm32 0h16v11H82zm32 0h16v11h-16z" fill="#111827"/><text x="100" y="265" text-anchor="middle" class="track-label">START / FINISH</text></g>
 </svg>
 </div></div>
 <div class="hud"><span>SESSION <b id="session">READY</b></span><span>LAP <b id="lap">0 / 3</b></span><span>TRACK STATUS <b id="status">GREEN</b></span><span class="lights" id="lights" aria-label="Starting lights"><i class="light"></i><i class="light"></i><i class="light"></i><i class="light"></i><i class="light"></i></span></div><div class="race-actions"><button class="btn primary" id="start">🏁 Start race</button><button class="btn" id="stop">Pause</button><button class="btn" id="reset">Reset cars</button></div><section class="music-panel"><div><strong>♫ LEO GP SOUNDTRACK</strong><div class="muted">Original AI-generated instrumental race music</div></div><audio id="raceMusic" controls loop preload="none"><source id="musicSource" src="" type="audio/mpeg"></audio></section>
@@ -47,7 +46,7 @@ const board=document.getElementById('board'),track=document.getElementById('trac
 const ns={};let racing=false,lapTimer=null;
 function lanePath(i){
  const inset=38+i*18, x=inset,y=inset,w=1000-2*inset,h=600-2*inset,r=Math.min(115, h*.39);
- return {d:`M ${x+r} ${y} H ${x+w-r} Q ${x+w} ${y} ${x+w} ${y+r} V ${y+h-r} Q ${x+w} ${y+h} ${x+w-r} ${y+h} H ${x+r} Q ${x} ${y+h} ${x} ${y+h-r} V ${y+r} Q ${x} ${y} ${x+r} ${y} Z`,x,y,w,h};
+ return {d:`M ${x} ${y+h/2} V ${y+r} Q ${x} ${y} ${x+r} ${y} H ${x+w-r} Q ${x+w} ${y} ${x+w} ${y+r} V ${y+h-r} Q ${x+w} ${y+h} ${x+w-r} ${y+h} H ${x+r} Q ${x} ${y+h} ${x} ${y+h-r} V ${y+h/2} Z`,x,y,w,h};
 }
 function cssPath(i){const p=lanePath(i),b=track.getBoundingClientRect(),sx=b.width/1000,sy=b.height/600,x=p.x*sx,y=p.y*sy,w=p.w*sx,h=p.h*sy,r=Math.min(115,h*.39);return `path('M ${x+r} ${y} H ${x+w-r} Q ${x+w} ${y} ${x+w} ${y+r} V ${y+h-r} Q ${x+w} ${y+h} ${x+w-r} ${y+h} H ${x+r} Q ${x} ${y+h} ${x} ${y+h-r} V ${y+r} Q ${x} ${y} ${x+r} ${y} Z')`;}
 function updateCarPaths(){tiers.forEach((t,i)=>{const car=document.getElementById('car-'+t.id);if(car)car.style.offsetPath=cssPath(i);});}
