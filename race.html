@@ -41,10 +41,10 @@ function getInput(id){const el=document.getElementById('n-'+id);return el.value.
 function resolve(id,path=[]){
  if(path.includes(id))return {cycle:[...path,id]};
  const source=document.getElementById('source-'+id).value;
- if(source==='self')return {expr:getInput(id),chain:[id]};
+ if(source==='self')return {expr:id+'('+getInput(id)+')',chain:[id]};
  const next=resolve(source,[...path,id]);
  if(next.cycle)return next;
- return {expr:next.expr,chain:[id,...next.chain]};
+ return {expr:id+'('+next.expr+')',chain:[id,...next.chain]};
 }
 function run(){
  const results=document.getElementById('results');let html='<h2>Race results</h2><p class="muted">Symbolic input flow for each lane</p>';
@@ -55,7 +55,7 @@ function run(){
   const expression=r.chain.slice().reverse().map((id,i)=>id).join('(')+(r.chain.length?')'.repeat(r.chain.length-1):'');
   const readable=r.chain.slice().reverse().join(' → ');
   bar.style.width=(t.rank/8*100)+'%';
-  html+='<div class="result"><b>'+t.id+' receives:</b><div class="formula">'+t.id+'('+r.expr+')</div><div class="muted">Fuel route: '+readable+' · starting n: '+getInput(t.id)+'</div></div>';
+  html+='<div class="result"><b>'+t.id+' output expression:</b><div class="formula">'+r.expr+'</div><div class="muted">Fuel route: '+readable+' · own starting n: '+getInput(t.id)+'</div></div>';
  });
  html+='<p class="muted">Track fill indicates the declared tier position only. It is not a measured runtime or numerical magnitude.</p>';
  results.innerHTML=html;
