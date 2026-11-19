@@ -13,7 +13,7 @@
 <body>
 <header class="wrap top"><a class="brand" href="index.html">LEO<span> / </span>HIERARCHY</a><nav><a href="index.html">← Main hierarchy</a></nav></header>
 <main class="wrap">
-<section class="hero"><div class="eyebrow">Leo Grand Prix · 8 cars · 1 circuit</div><h1>Start your <span style="color:var(--cyan)">engines.</span></h1><p>Configure the fuel for every Leo racer, then send all eight cars around the circuit. Each car can take its own n or another Leo's output as its input.</p></section>
+<section class="hero"><div class="eyebrow">Leo Grand Prix · 8 cars · 1 circuit</div><h1>Start your <span style="color:var(--cyan)">engines.</span></h1><p>Configure the fuel for every Leo racer, then send all eight cars around the circuit. Each car can take its own n or another Leo's selected fuel chain as its input. The race-only speed rule makes n visibly affect car speed.</p></section>
 <div class="track-shell">
 <div class="track" id="track" aria-label="Animated eight-lane race circuit">
 <svg viewBox="0 0 1000 600" role="img" aria-label="Top-down oval racing circuit with eight lanes">
@@ -49,7 +49,7 @@ function lanePath(i){
  const inset=38+i*18, x=inset,y=inset,w=1000-2*inset,h=600-2*inset,r=Math.min(115, h*.39);
  return {d:`M ${x+r} ${y} H ${x+w-r} Q ${x+w} ${y} ${x+w} ${y+r} V ${y+h-r} Q ${x+w} ${y+h} ${x+w-r} ${y+h} H ${x+r} Q ${x} ${y+h} ${x} ${y+h-r} V ${y+r} Q ${x} ${y} ${x+r} ${y} Z`,x,y,w,h};
 }
-function cssPath(i){const p=lanePath(i),b=track.getBoundingClientRect(),sx=b.width/1000,sy=b.height/600,x=p.x*sx,y=p.y*sy,w=p.w*sx,h=p.h*sy,r=Math.min(115,h*.39);return \`path('M \${x+r} \${y} H \${x+w-r} Q \${x+w} \${y} \${x+w} \${y+r} V \${y+h-r} Q \${x+w} \${y+h} \${x+w-r} \${y+h} H \${x+r} Q \${x} \${y+h} \${x} \${y+h-r} V \${y+r} Q \${x} \${y} \${x+r} \${y} Z')\`;}
+function cssPath(i){const p=lanePath(i),b=track.getBoundingClientRect(),sx=b.width/1000,sy=b.height/600,x=p.x*sx,y=p.y*sy,w=p.w*sx,h=p.h*sy,r=Math.min(115,h*.39);return `path('M ${x+r} ${y} H ${x+w-r} Q ${x+w} ${y} ${x+w} ${y+r} V ${y+h-r} Q ${x+w} ${y+h} ${x+w-r} ${y+h} H ${x+r} Q ${x} ${y+h} ${x} ${y+h-r} V ${y+r} Q ${x} ${y} ${x+r} ${y} Z')`;}
 function updateCarPaths(){tiers.forEach((t,i)=>{const car=document.getElementById('car-'+t.id);if(car)car.style.offsetPath=cssPath(i);});}
 function build(){
  board.innerHTML='';laneGroup.innerHTML='';
@@ -64,32 +64,37 @@ function build(){
   board.appendChild(card);
  });
 }
-function getN(id){const v=document.getElementById('n-'+id).value.trim();return v===''?'n':v;}
+function getN(id){const v=Number(document.getElementById('n-'+id).value);return Number.isFinite(v)&&v>=0?v:0;}
 function resolve(id,path=[]){
  if(path.includes(id))return {cycle:[...path,id]};
  const source=document.getElementById('source-'+id).value;
- if(source==='self')return {expr:id+'('+getN(id)+')',chain:[id]};
+ if(source==='self')return {expr:id+'('+getN(id)+')',chain:[id],fuel:getN(id)};
  const r=resolve(source,[...path,id]);if(r.cycle)return r;
- return {expr:id+'('+r.expr+')',chain:[id,...r.chain]};
+ return {expr:id+'('+r.expr+')',chain:[id,...r.chain],fuel:r.fuel};
 }
+// Race-only rule: the final selected fuel n controls speed logarithmically.
+// This is a transparent game mechanic, NOT the mathematical definition of a Leo function.
+function raceSpeed(fuel,chainLength){return 1.5+Math.log10(1+fuel)*0.8+Math.max(0,chainLength-1)*0.18;}
 function renderResults(){
- let html='<h2>Fuel inspection</h2><p class="muted">Every racer’s input chain is checked before the start.</p>';
- tiers.forEach(t=>{
-  const r=resolve(t.id);
+ const rows=tiers.map(t=>({tier:t,result:resolve(t.id)}));
+ let html='<h2>Fuel inspection & race estimates</h2><p class="muted">Bigger effective n gives a faster car in this race simulation. Selected Leo fuel chains pass along the final source n.</p>';
+ rows.forEach(({tier:t,result:r})=>{
   if(r.cycle){html+='<div class="result"><b>'+t.id+'</b><div class="warning">Circular fuel loop: '+r.cycle.join(' → ')+'</div></div>';return;}
-  html+='<div class="result"><b>'+t.id+'</b><div class="formula">'+r.expr+'</div><div class="muted">Fuel route: '+r.chain.join(' ← ')+' · starting n: '+getN(t.id)+'</div></div>';
+  const speed=raceSpeed(r.fuel,r.chain.length);
+  html+='<div class="result"><b>'+t.id+'</b><div class="formula">'+r.expr+'</div><div class="muted">Fuel route: '+r.chain.join(' ← ')+' · effective n: '+r.fuel.toLocaleString()+' · simulated speed: '+speed.toFixed(2)+'×</div></div>';
  });
- html+='<p class="warning"><b>Mathematical winner: not calculated.</b> The cars’ visual demonstration order is not a numerical comparison of Leo outputs.</p>';
+ html+='<p class="warning"><b>Important:</b> the simulated speed is a race-game rule so n has a real visible effect. It is not a calculation of actual Leo function values.</p>';
  document.getElementById('results').innerHTML=html;
+ return rows;
 }
 function start(){
- renderResults();const cycles=tiers.filter(t=>resolve(t.id).cycle);
+ const rows=renderResults();const cycles=rows.filter(x=>x.result.cycle);
  if(cycles.length){document.getElementById('results').innerHTML+='<p class="warning">Fix the circular fuel routes before racing.</p>';return;}
  racing=true;
- tiers.forEach(t=>{
-  const car=document.getElementById('car-'+t.id);
+ rows.forEach(({tier:t,result:r})=>{
+  const car=document.getElementById('car-'+t.id),speed=raceSpeed(r.fuel,r.chain.length);
   car.style.animation='none';car.offsetHeight;
-  car.style.animation='drive '+(17-t.rank*1.05)+'s linear infinite';
+  car.style.animation='drive '+(22/speed)+'s linear infinite';
  });
  document.getElementById('start').textContent='🏁 Race running';
 }
