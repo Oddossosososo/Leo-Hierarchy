@@ -49,6 +49,8 @@ function lanePath(i){
  const inset=38+i*18, x=inset,y=inset,w=1000-2*inset,h=600-2*inset,r=Math.min(115, h*.39);
  return {d:`M ${x+r} ${y} H ${x+w-r} Q ${x+w} ${y} ${x+w} ${y+r} V ${y+h-r} Q ${x+w} ${y+h} ${x+w-r} ${y+h} H ${x+r} Q ${x} ${y+h} ${x} ${y+h-r} V ${y+r} Q ${x} ${y} ${x+r} ${y} Z`,x,y,w,h};
 }
+function cssPath(i){const p=lanePath(i),b=track.getBoundingClientRect(),sx=b.width/1000,sy=b.height/600,x=p.x*sx,y=p.y*sy,w=p.w*sx,h=p.h*sy,r=Math.min(115,h*.39);return \`path('M \${x+r} \${y} H \${x+w-r} Q \${x+w} \${y} \${x+w} \${y+r} V \${y+h-r} Q \${x+w} \${y+h} \${x+w-r} \${y+h} H \${x+r} Q \${x} \${y+h} \${x} \${y+h-r} V \${y+r} Q \${x} \${y} \${x+r} \${y} Z')\`;}
+function updateCarPaths(){tiers.forEach((t,i)=>{const car=document.getElementById('car-'+t.id);if(car)car.style.offsetPath=cssPath(i);});}
 function build(){
  board.innerHTML='';laneGroup.innerHTML='';
  tiers.forEach((t,i)=>{
@@ -97,6 +99,6 @@ const style=document.createElement('style');style.textContent='@keyframes drive{
 document.getElementById('start').addEventListener('click',start);
 document.getElementById('stop').addEventListener('click',pause);
 document.getElementById('reset').addEventListener('click',reset);
-build();
+build();window.addEventListener('resize',updateCarPaths);requestAnimationFrame(updateCarPaths);
 </script>
 </body></html>
