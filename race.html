@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090b16">
+<title>Leo Hierarchy — Race Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#090b16;--panel:#11172a;--panel2:#151e35;--line:#293552;--text:#edf2ff;--muted:#a6b2ce;--cyan:#7de4ff;--violet:#b8a2ff;--gold:#ffd98a;--green:#9ce8c0;--pink:#ff9fc8}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#1a2850 0,transparent 38%),radial-gradient(ellipse at 90% 12%,#30204e 0,transparent 32%),var(--bg);color:var(--text);font:15px/1.6 Inter,system-ui,sans-serif}.wrap{width:min(1100px,calc(100% - 32px));margin:auto}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:22px 0;border-bottom:1px solid #ffffff17}.brand{font-weight:900;letter-spacing:.08em;color:var(--text);text-decoration:none}.brand span{color:var(--cyan)}a{color:var(--cyan);text-decoration:none}.hero{padding:55px 0 25px}.eyebrow{color:var(--cyan);font-size:.75rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase}.hero h1{font-size:clamp(2.5rem,7vw,5rem);letter-spacing:-.06em;line-height:1;margin:12px 0}.hero p,.muted{color:var(--muted)}.board{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:24px 0}.lane{background:linear-gradient(145deg,#151d34,#0e1425);border:1px solid var(--line);border-radius:17px;padding:17px;position:relative;overflow:hidden}.lane:before{content:attr(data-rank);position:absolute;right:12px;top:-15px;font-size:5rem;font-weight:900;color:#ffffff09}.lanehead{display:flex;justify-content:space-between;gap:12px;align-items:center;position:relative}.lane h2{font-size:1.12rem;margin:0}.rank{font-size:.7rem;color:var(--cyan);letter-spacing:.12em;font-weight:800}.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px;position:relative}.field label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:5px}.field input,.field select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:#090f20;color:var(--text);font:inherit;min-width:0}.track{height:13px;background:#070b16;border:1px solid var(--line);border-radius:99px;margin-top:15px;overflow:hidden}.track span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--violet),var(--pink));border-radius:99px;transition:width .5s}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}.btn{border:1px solid var(--line);background:#ffffff0a;color:var(--text);border-radius:999px;padding:11px 17px;font:700 .9rem inherit;cursor:pointer}.btn.primary{background:linear-gradient(100deg,#1b7892,#6551a8);border:0}.btn:hover{filter:brightness(1.2)}.results{border:1px solid #7de4ff55;background:#7de4ff0b;border-radius:17px;padding:20px;margin:22px 0}.results h2{margin:0 0 5px}.result{padding:13px 0;border-top:1px solid #ffffff17}.result:first-of-type{margin-top:12px}.formula{font: .9rem/1.6 ui-monospace,monospace;color:var(--cyan);overflow-wrap:anywhere}.warning{color:var(--gold)}.note{font-size:.9rem;color:var(--muted);border-left:3px solid var(--gold);padding:8px 13px;margin:20px 0}.foot{padding:30px 0 50px;border-top:1px solid #ffffff17;color:var(--muted);font-size:.85rem}@media(max-width:700px){.board{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.controls{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header class="wrap top"><a class="brand" href="index.html">LEO<span> / </span>HIERARCHY</a><nav><a href="index.html">← Main hierarchy</a></nav></header>
+<main class="wrap">
+<section class="hero"><div class="eyebrow">Interactive experiment · 07 / Race lab</div><h1>Set the <span style="color:var(--cyan)">starting fuel.</span></h1><p>Give every Leo its own n, then choose which Leo's output becomes its input. Any tier can feed another tier, so you can build chains and compare the resulting expressions.</p></section>
+<div class="note"><b>How this works:</b> Each lane has a starting n and an input source. “Its own n” uses that lane's number. Choosing another Leo means that function's output is passed in as this lane's input. Cycles are detected and flagged.</div>
+<section class="board" id="board" aria-label="Leo race lanes"></section>
+<div class="actions"><button class="btn primary" id="run">Run race setup ↗</button><button class="btn" id="reset">Reset all lanes</button></div>
+<section class="results" id="results" aria-live="polite"><h2>Race results</h2><p class="muted">Set your inputs, then run the race setup.</p></section>
+<p class="note"><b>Math status:</b> This lab displays exact symbolic input chains. It does not invent numerical outputs: the complete executable definitions and evaluation rules for all eight Leo functions are not yet specified. The official tier order is shown as the project's declared order, not a proven same-input numerical race result.</p>
+</main>
+<footer class="wrap foot">LEO / HIERARCHY · <a href="https://github.com/Oddossosososo/Leo-Hierarchy">Source repository</a></footer>
+<script>
+const tiers=[
+ {id:'L_L',name:'Little Leo',rank:1},{id:'Q_LEO',name:'Quantum Leo',rank:2},
+ {id:'B_LEO',name:'Big Leo',rank:3},{id:'M_LEO',name:'Mega Leo',rank:4},
+ {id:'V_LEO',name:'Void Leo',rank:5},{id:'U_LEO',name:'Ultra Leo',rank:6},
+ {id:'C_LEO',name:'Crazy Leo',rank:7},{id:'EX_LEO',name:'Ex Leo',rank:8}
+];
+const board=document.getElementById('board');
+function build(){
+ board.innerHTML='';
+ tiers.forEach(t=>{
+  const lane=document.createElement('article');lane.className='lane';lane.dataset.rank=String(t.rank).padStart(2,'0');
+  const options='<option value="self">Its own n</option>'+tiers.filter(x=>x.id!==t.id).map(x=>'<option value="'+x.id+'">'+x.id+' — '+x.name+'</option>').join('');
+  lane.innerHTML='<div class="lanehead"><div><div class="rank">TIER '+String(t.rank).padStart(2,'0')+'</div><h2>'+t.id+' — '+t.name+'</h2></div></div><div class="controls"><div class="field"><label for="n-'+t.id+'">Starting n</label><input id="n-'+t.id+'" type="number" min="0" step="1" value="10"></div><div class="field"><label for="source-'+t.id+'">Use as input</label><select id="source-'+t.id+'">'+options+'</select></div></div><div class="track"><span id="bar-'+t.id+'"></span></div>';
+  board.appendChild(lane);
+ });
+}
+function getInput(id){const el=document.getElementById('n-'+id);return el.value.trim()===''?'n':el.value;}
+function resolve(id,path=[]){
+ if(path.includes(id))return {cycle:[...path,id]};
+ const source=document.getElementById('source-'+id).value;
+ if(source==='self')return {expr:getInput(id),chain:[id]};
+ const next=resolve(source,[...path,id]);
+ if(next.cycle)return next;
+ return {expr:next.expr,chain:[id,...next.chain]};
+}
+function run(){
+ const results=document.getElementById('results');let html='<h2>Race results</h2><p class="muted">Symbolic input flow for each lane</p>';
+ tiers.forEach(t=>{
+  const r=resolve(t.id);
+  const bar=document.getElementById('bar-'+t.id);
+  if(r.cycle){bar.style.width='0';html+='<div class="result"><b>'+t.id+'</b><div class="warning">Input loop detected: '+r.cycle.join(' → ')+'</div><div class="muted">Change one of these input sources to break the cycle.</div></div>';return;}
+  const expression=r.chain.slice().reverse().map((id,i)=>id).join('(')+(r.chain.length?')'.repeat(r.chain.length-1):'');
+  const readable=r.chain.slice().reverse().join(' → ');
+  bar.style.width=(t.rank/8*100)+'%';
+  html+='<div class="result"><b>'+t.id+' receives:</b><div class="formula">'+t.id+'('+r.expr+')</div><div class="muted">Fuel route: '+readable+' · starting n: '+getInput(t.id)+'</div></div>';
+ });
+ html+='<p class="muted">Track fill indicates the declared tier position only. It is not a measured runtime or numerical magnitude.</p>';
+ results.innerHTML=html;
+}
+document.getElementById('run').addEventListener('click',run);
+document.getElementById('reset').addEventListener('click',()=>{build();document.getElementById('results').innerHTML='<h2>Race results</h2><p class="muted">All lanes reset to n = 10 and their own input.</p>';});
+build();
+</script>
+</body></html>
